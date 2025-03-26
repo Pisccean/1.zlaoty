@@ -238,12 +238,19 @@ const main = async () => {
     logger.log("\n\n");
     const events = recording.replay();
     let content = events.map((e) => `${e.data.join("")}`).join("  \n");
-    
-    // 提取最后一个主账号汇总块
-    const summaryBlock = content.match(/账号.*家庭容量\+ \d+M[\s\S]*?个人总容量：\d+\.\d{2}G, 家庭总容量：\d+\.\d{2}G/);   
+
+    const summaryBlock = content.match(
+      /(主账号)(.*?)(本次家庭容量\+ \d+M[\s\S]*?个人总容量：\d+\.\d{2}G, 家庭总容量：\d+\.\d{2}G)/
+    );
+
     if (summaryBlock) {
-     content = `${summaryBlock[0]}  \n\n${content}`; // 插入到最前面
-   }
+      const account = summaryBlock[2];
++     const last4Digits = account.slice(-4); // 直接截取后4位
+      
+      content = 
+-       `${summaryBlock[0]}  \n\n${content}`;
++       `${summaryBlock[1]}${last4Digits} ${summaryBlock[3]}  \n\n${content}`;
+    }
 
     push("天翼云A组报告", content);
   }
