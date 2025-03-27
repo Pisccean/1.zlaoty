@@ -245,10 +245,14 @@ const main = async () => {
 
     if (summaryBlock) {
       const account = summaryBlock[2];
-      const last4Digits = account.slice(-4); // 直接截取后4位
+      // 增强处理逻辑
+      const cleanAccount = account
+        .replace(/\*/g, '') // 移除所有脱敏星号
+        .replace(/\s/g, ''); // 去除空格等干扰字符
+      const last4Digits = cleanAccount.slice(-4).padStart(4, '0'); // 不足4位补零
       
       content = 
-        `${summaryBlock[1]}${last4Digits} ${summaryBlock[3]}  \n\n${content}`;
+        `主账号${last4Digits} ${summaryBlock[3]}  \n\n${content}`; // 重构输出格式
     }
 
     push("天翼云A组报告", content);
