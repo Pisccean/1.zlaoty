@@ -245,11 +245,10 @@ const main = async () => {
 
     if (summaryBlock) {
       const account = summaryBlock[2];
-+     const last4Digits = account.slice(-4); // 直接截取后4位
+      const last4Digits = account.slice(-4); // 直接截取后4位
       
       content = 
--       `${summaryBlock[0]}  \n\n${content}`;
-+       `${summaryBlock[1]}${last4Digits} ${summaryBlock[3]}  \n\n${content}`;
+        `${summaryBlock[1]}${last4Digits} ${summaryBlock[3]}  \n\n${content}`;
     }
 
     push("天翼云A组报告", content);
