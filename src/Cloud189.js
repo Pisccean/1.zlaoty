@@ -116,13 +116,13 @@ const main = async () => {
       : 12;   //前6个账号个人云签10次
     const FAMILY_Y = process.env.FAMILY_Y 
       ? parseInt(process.env.FAMILY_Y) 
-      : 12;   //前6个账号家庭云签10次
+      : 1;   //前6个账号家庭云签10次
     const PRIVATE_Z = process.env.PRIVATE_Z 
       ? parseInt(process.env.PRIVATE_Z) 
       : 0;  //其他账号个人云签0次
     const FAMILY_Z = process.env.FAMILY_Z 
       ? parseInt(process.env.FAMILY_Z) 
-      : 12;   //其他账号家庭云签10次
+      : 1;   //其他账号家庭云签10次
 
     for (i = 1; i < accounts.length; i += 2) {
       const [userName, password] = accounts.slice(i, i + 2);
