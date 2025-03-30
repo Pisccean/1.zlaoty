@@ -104,12 +104,6 @@ const main = async () => {
 
     let familyCapacitySize, familyCapacitySize2, firstUserName;
     FAMILY_ID = accounts[0];
-    
-    // 新增：计算每组家庭容量平均值
-const accountCount = (accounts.length - 1) / 2; // 账号数量
-const totalMB = (familyCapacitySize2 - familyCapacitySize) / (1024 * 1024);
-const avgMB = totalMB / accountCount;
-logger.log(`家庭容量+${totalMB.toFixed(1)}M -- 号均：${avgMB.toFixed(1)}M`); // 新增日志行
 
     // 读取环境变量配置 
     //当currentIndex < THRESHOLD_COUNT时使用Y配置 
@@ -197,8 +191,8 @@ logger.log(`家庭容量+${totalMB.toFixed(1)}M -- 号均：${avgMB.toFixed(1)}M
             1024 /
             1024 /
             1024
-          ).toFixed(2)}G, 家庭总容量：${(
-            familyCapacityInfo2.totalSize /
+          ).toFixed(2)}G, 家庭总容量：${
+            (familyCapacityInfo2.totalSize /
             1024 /
             1024 /
             1024
@@ -212,6 +206,14 @@ logger.log(`家庭容量+${totalMB.toFixed(1)}M -- 号均：${avgMB.toFixed(1)}M
         logger.log("");
       }
     }
+
+    // ================ 新增：计算本组平均值 ================
+    const accountCount = (accounts.length - 1) / 2;
+    const totalMB = (familyCapacitySize2 - familyCapacitySize) / (1024 * 1024);
+    const avgMB = totalMB / accountCount;
+    logger.log(`家庭容量+${totalMB.toFixed(1)}M -- 号均：${avgMB.toFixed(1)}M`);
+    // =================================================
+
     userNameInfo = mask(firstUserName, 3, 7);
     const capacityChange = familyCapacitySize2 - familyCapacitySize;
     logger.log(
@@ -245,35 +247,30 @@ logger.log(`家庭容量+${totalMB.toFixed(1)}M -- 号均：${avgMB.toFixed(1)}M
     const events = recording.replay();
     let content = events.map((e) => `${e.data.join("")}`).join("  \n");
 
+    // ================ 修改推送内容逻辑 ================
+    // 匹配新增的平均容量行
+    const avgLine = content.match(/家庭容量\+([\d.]+)M -- 号均：([\d.]+)M/);
+    // 匹配原有主账号汇总
     const summaryBlock = content.match(
       /(主账号)(.*?)(家庭容量\+ \d+M[\s\S]*?个人总容量：\d+\.\d{2}G, 家庭总容量：\d+\.\d{2}G)/
     );
 
+    let pushHeader = "";
+    // 添加平均容量信息
+    if (avgLine) {
+      pushHeader += `家庭容量+${avgLine[1]}M -- 号均：${avgLine[2]}M\n\n`;
+    }
+    // 保留原有主账号信息
     if (summaryBlock) {
       const account = summaryBlock[2];
       // 增强处理逻辑
-      const cleanAccount = account
-        .replace(/\*/g, '') // 移除所有脱敏星号
-        .replace(/\s/g, ''); // 去除空格等干扰字符
+      const cleanAccount = account.replace(/\*/g, '').replace(/\s/g, ''); // 移除所有脱敏星号，去除空格等干扰字符
       const last4Digits = cleanAccount.slice(-4).padStart(4, '0'); // 不足4位补零
-      
-      content = 
-        `主账号${last4Digits} ${summaryBlock[3]}  \n\n${content}`; // 重构输出格式
+      pushHeader += `主账号${last4Digits} ${summaryBlock[3]}\n\n`; // 重构输出格式
     }
-      // 新增：匹配平均容量行
-      const avgLine = content.match(/家庭容量\+([\d.]+)M -- 号均：([\d.]+)M/);
 
-    
-     // 组合推送内容
-    let pushHeader = "";
-    if (avgLine) {
-      pushHeader = `家庭容量+${avgLine[1]}M -- 号均：${avgLine[2]}M\n\n`; // 首行新增内容
-    }
-    if (summaryBlock) {
-      pushHeader += `${summaryBlock[0]}\n\n`; // 保留原有汇总块
-    }
-    
     content = pushHeader + content;
-    push("天翼云A组报告", content);
+    push("天翼云盘9025报告", content);
+    // ==============================================
   }
 })();
