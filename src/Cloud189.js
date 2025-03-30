@@ -211,7 +211,7 @@ const main = async () => {
     const accountCount = (accounts.length - 1) / 2;
     const totalMB = (familyCapacitySize2 - familyCapacitySize) / (1024 * 1024);
     const avgMB = totalMB / accountCount;
-    logger.log(`家庭容量+${totalMB.toFixed(1)}M -- 号均：${avgMB.toFixed(1)}M`);
+    logger.log(`家庭容量+${totalMB.toFixed(1)}M  号均：${avgMB.toFixed(1)}M`);
     // =================================================
 
     userNameInfo = mask(firstUserName, 3, 7);
@@ -249,7 +249,7 @@ const main = async () => {
 
     // ================ 修改推送内容逻辑 ================
     // 匹配新增的平均容量行
-    const avgLine = content.match(/家庭容量\+([\d.]+)M -- 号均：([\d.]+)M/);
+    const avgLine = content.match(/家庭容量\+([\d.]+)M  号均：([\d.]+)M/);
     // 匹配原有主账号汇总
     const summaryBlock = content.match(
       /(主账号)(.*?)(家庭容量\+ \d+M[\s\S]*?个人总容量：\d+\.\d{2}G, 家庭总容量：\d+\.\d{2}G)/
@@ -258,7 +258,7 @@ const main = async () => {
     let pushHeader = "";
     // 添加平均容量信息
     if (avgLine) {
-      pushHeader += `家庭容量+${avgLine[1]}M -- 号均：${avgLine[2]}M\n\n`;
+      pushHeader += `家庭容量+${avgLine[1]}M  号均：${avgLine[2]}M\n\n`;
     }
     // 保留原有主账号信息
     if (summaryBlock) {
