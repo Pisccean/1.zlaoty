@@ -110,19 +110,19 @@ const main = async () => {
     //当currentIndex >= THRESHOLD_COUNT时使用Z配置
     const THRESHOLD_COUNT = process.env.THRESHOLD_COUNT 
       ? parseInt(process.env.THRESHOLD_COUNT) 
-      : 6; //前3个账号配置
+      : 5; //前5个账号配置
     const PRIVATE_Y = process.env.PRIVATE_Y 
       ? parseInt(process.env.PRIVATE_Y) 
-      : 12;   //前6个账号个人云签10次
+      : 12;   //前5个账号个人云签12次
     const FAMILY_Y = process.env.FAMILY_Y 
       ? parseInt(process.env.FAMILY_Y) 
-      : 1;   //前6个账号家庭云签10次
+      : 1;   //前5个账号家庭云签1次
     const PRIVATE_Z = process.env.PRIVATE_Z 
       ? parseInt(process.env.PRIVATE_Z) 
       : 0;  //其他账号个人云签0次
     const FAMILY_Z = process.env.FAMILY_Z 
       ? parseInt(process.env.FAMILY_Z) 
-      : 1;   //其他账号家庭云签10次
+      : 1;   //其他账号家庭云签1次
 
     for (i = 1; i < accounts.length; i += 2) {
       const [userName, password] = accounts.slice(i, i + 2);
