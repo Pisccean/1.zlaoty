@@ -299,7 +299,7 @@ const main = async () => {
 
     content = pushHeader + content;
     // 修改推送标题，添加有效签到账号数和总账号数
-    push(`21天翼云报告: ${validSignAccounts}/${totalAccounts}`, content);
+    push(`天翼云盘25报告：${validSignAccounts}/${totalAccounts}`, content);
     // ==============================================
   }
 })();
