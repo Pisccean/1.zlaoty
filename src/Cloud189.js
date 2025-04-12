@@ -5,6 +5,13 @@ let { push } = require("./push");
 
 const { logger } = require("./logger");
 
+// 新增：全局变量统计有效签到账号数
+let validSignAccounts = 0;
+// 新增：全局变量统计总账号数
+let totalAccounts = 0;
+// 新增：记录无效家庭ID的账号
+let invalidFamilyAccounts = [];
+
 const sleep = async (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
@@ -16,7 +23,7 @@ const mask = (s, start, end) => {
 
 let timeout = 10000;
 
-const doTask = async (cloudClient, PRIVATE_THREADX, FAMILY_THREADX) => {
+const doTask = async (cloudClient, PRIVATE_THREADX, FAMILY_THREADX, userName) => {
   let result = [];
   let signPromises1 = [];
   let getSpace = [`${firstSpace}签到个人云获得(M)`];
@@ -45,7 +52,10 @@ const doTask = async (cloudClient, PRIVATE_THREADX, FAMILY_THREADX) => {
   const { familyInfoResp } = await cloudClient.getFamilyList();
   if (familyInfoResp) {
     const family = familyInfoResp.find((f) => f.familyId == FAMILY_ID);
-    if (!family) return result;
+    if (!family) {
+      invalidFamilyAccounts.push(userName);  // 新增：记录无效家庭ID的账号
+      return result;
+    }
     result.push(`${firstSpace}开始签到家庭云 ID: ${family.familyId}`);
     for (let i = 0; i < FAMILY_THREADX; i++) {
       signPromises1.push(
@@ -54,6 +64,10 @@ const doTask = async (cloudClient, PRIVATE_THREADX, FAMILY_THREADX) => {
             const res = await cloudClient.familyUserSign(family.familyId);
             if (!res.signStatus) {
               getSpace.push(` ${res.bonusSpace}`);
+              // 新增：当获得容量>0时增加计数器
+              if (res.bonusSpace > 0) {
+                validSignAccounts++;
+              }
             }
           } catch (e) {}
         })()
@@ -63,6 +77,9 @@ const doTask = async (cloudClient, PRIVATE_THREADX, FAMILY_THREADX) => {
     await Promise.race([Promise.all(signPromises1), sleep(timeout)]);
     if (getSpace.length == 1) getSpace.push(" 0");
     result.push(getSpace.join(""));
+  } else {
+    invalidFamilyAccounts.push(userName);  // 新增：记录没有familyInfoResp的账号
+    return result;
   }
   return result;
 };
@@ -101,6 +118,7 @@ const main = async () => {
 
   for (let p = 0; p < accounts_group.length; p++) {
     accounts = accounts_group[p].trim().split(/[\n ]+/);
+    totalAccounts += Math.floor((accounts.length - 1) / 2); // 新增：累加总账号数
 
     let familyCapacitySize, familyCapacitySize2, firstUserName;
     FAMILY_ID = accounts[0];
@@ -110,13 +128,13 @@ const main = async () => {
     //当currentIndex >= THRESHOLD_COUNT时使用Z配置
     const THRESHOLD_COUNT = process.env.THRESHOLD_COUNT 
       ? parseInt(process.env.THRESHOLD_COUNT) 
-      : 5; //前5个账号配置
+      : 1; //前1个账号配置
     const PRIVATE_Y = process.env.PRIVATE_Y 
       ? parseInt(process.env.PRIVATE_Y) 
-      : 12;   //前5个账号个人云签12次
+      : 12;   //前1个账号个人云签12次
     const FAMILY_Y = process.env.FAMILY_Y 
       ? parseInt(process.env.FAMILY_Y) 
-      : 1;   //前5个账号家庭云签1次
+      : 1;   //前1个账号家庭云签1次
     const PRIVATE_Z = process.env.PRIVATE_Z 
       ? parseInt(process.env.PRIVATE_Z) 
       : 0;  //其他账号个人云签0次
@@ -160,7 +178,7 @@ const main = async () => {
           familyCapacityInfo: familyCapacityInfo0,
         } = await cloudClient.getUserSizeInfo();
 
-        const result = await doTask(cloudClient, PRIVATE_THREADX, FAMILY_THREADX);
+        const result = await doTask(cloudClient, PRIVATE_THREADX, FAMILY_THREADX, userName);
         result.forEach((r) => logger.log(r));
 
         let {
@@ -232,10 +250,20 @@ const main = async () => {
         1024 /
         1024
       ).toFixed(2)}G, 家庭总容量：${
-        (familyCapacityInfo2.totalSize / 1024 / 1024 / 1024).toFixed(2)
-      }G`
+        (familyCapacityInfo2.totalSize /
+        1024 /
+        1024 /
+        1024
+      ).toFixed(2)}G`
     );
     logger.log("");
+  }
+  // 新增：输出无效家庭ID的账号列表
+  if (invalidFamilyAccounts.length > 0) {
+    logger.log(`以下账号没有加入主号家庭:（${invalidFamilyAccounts.length}个）`);
+    invalidFamilyAccounts.forEach(account => {
+      logger.log(account);
+    });
   }
 };
 
@@ -270,7 +298,8 @@ const main = async () => {
     }
 
     content = pushHeader + content;
-    push("天翼云盘9025报告", content);
+    // 修改推送标题，添加有效签到账号数和总账号数
+    push(`21天翼云报告: ${validSignAccounts}/${totalAccounts}`, content);
     // ==============================================
   }
 })();
